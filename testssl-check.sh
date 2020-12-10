@@ -22,6 +22,13 @@ declare -A sslVulnList=(
     ['logjam']="-cipher EXP-RC4-MD5 -connect" # EXPORT ciphers not available on newer openssl
     ['beast']="-tls1 -cipher AES128-SHA -connect"
     ['rc4']="-cipher ECDH-RSA-RC4-SHA -connect" # RC4 ciphers not available on newer openssl
+    ['ssl-enum-ciphers']="--script=ssl-enum-ciphers -p 443"
+    ['ssl2']="-ssl2 -connect"
+    ['ssl3']="-ssl3 -connect"
+    ['tls1']="-tls1 -connect"
+    ['tls1_1']="-tls1_1 -connect"
+    ['tls1_2']="-tls1_2 -connect"
+    ['tls1_3']="-tls1_3 -connect"
 )
 
 # test -z checks if a varible's length is zero 
@@ -31,7 +38,7 @@ if test -z $1; then # If there's no parameter specified
     exit 0
     elif [ $1 == '-list' ]; then # If the first parameter is '-list'
         echo "Available TestSSL Checks:"
-        for key in "${!sslVulnList[@]}"; do # The "!" prints the keys, without the "!" it prints the values.
+        for key in "${!sslVulnList[@]}"; do # The "!" prints the keys, without the "!" it prints the values
             echo -e "\t $key"
         done
 
@@ -55,6 +62,11 @@ fi
 sslVuln=$1
 target=$2
 
+if [ ${target: -4} != ":443"  ]; # Checks if the last 4 chars of the target are :443, if not, it adds it to the target
+	then target="${target}:443"
+fi
+
+
 set -u # To treat unset variables as an error
 
 case $sslVuln in
@@ -64,6 +76,11 @@ case $sslVuln in
         ;;
 
     'ccs')
+        echo -e "${YELLOW}$ ${BLUE}nmap${NC} ${sslVulnList[$sslVuln]} $target"
+        nmap ${sslVulnList[$sslVuln]} $target
+        ;;
+
+    'ssl-enum-ciphers')
         echo -e "${YELLOW}$ ${BLUE}nmap${NC} ${sslVulnList[$sslVuln]} $target"
         nmap ${sslVulnList[$sslVuln]} $target
         ;;
